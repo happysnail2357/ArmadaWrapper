@@ -1,0 +1,14 @@
+LIBRARY armadawrap
+EXPORTS
+    ConfigureTrueAPI
+
+    RegisterClassA = WrapRegisterClassA
+    CreateWindowExA = WrapCreateWindowExA
+    DestroyWindow = WrapDestroyWindow
+    GetCursorPos = WrapGetCursorPos
+    SetCursorPos = WrapSetCursorPos
+    SetCursor = WrapSetCursor
+    DialogBoxParamA = WrapDialogBoxParamA
+    EndDialog = WrapEndDialog
+    SetWindowLongA = WrapSetWindowLongA
+    GetWindowLongA = WrapGetWindowLongA

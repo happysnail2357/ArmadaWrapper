@@ -1,0 +1,22 @@
+# SPDX-License-Identifier: MIT
+# Copyright © 2026 Paul Puhnaty
+
+user32 {
+    RegisterClassA
+    CreateWindowExA
+    DestroyWindow
+    GetCursorPos
+    SetCursorPos
+    SetCursor
+    DialogBoxParamA
+    EndDialog
+    SetWindowLongA
+    GetWindowLongA
+}
+
+binkw32 {
+    _BinkOpen@8
+    _BinkClose@4
+    _BinkCopyToBuffer@28
+    _BinkWait@4
+}

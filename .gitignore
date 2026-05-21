@@ -362,6 +362,7 @@ MigrationBackup/
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 
+vcpkg_installed/
 
 ###########################
 ##   Project  Excludes   ##
@@ -370,3 +371,7 @@ FodyWeavers.xsd
 # Some misc folders I have in my project folder
 Disassembly/
 ArmadaBin/
+
+# Ignore auto-generated content
+/WinmmProxy/apihooks.hash
+*.inc
