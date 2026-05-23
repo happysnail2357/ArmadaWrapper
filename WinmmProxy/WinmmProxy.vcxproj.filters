@@ -27,6 +27,9 @@
     <ClInclude Include="DebugMacros.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -45,5 +48,10 @@
     </None>
     <None Include="stub_generator.py" />
     <None Include="apihooks.map" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="WinmmProxy.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
   </ItemGroup>
 </Project>

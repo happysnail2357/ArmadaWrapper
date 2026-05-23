@@ -178,6 +178,7 @@
     <ClInclude Include="framework.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="PointerTypes.h" />
+    <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
@@ -193,6 +194,9 @@
     <None Include="apihooks.map" />
     <None Include="stub_generator.py" />
     <None Include="WinmmProxy.def" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="WinmmProxy.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

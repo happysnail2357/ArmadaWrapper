@@ -151,6 +151,7 @@
     <ClInclude Include="framework.h" />
     <ClInclude Include="MouseManager.h" />
     <ClInclude Include="pch.h" />
+    <ClInclude Include="resource.h" />
     <ClInclude Include="TrueApi.h" />
     <ClInclude Include="User32Wrap.h" />
   </ItemGroup>
@@ -171,6 +172,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="ArmadaHooks.def" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="ArmadaHooks.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
