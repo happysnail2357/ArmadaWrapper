@@ -95,11 +95,12 @@ LRESULT CALLBACK RelayWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
         case WA_CLICKACTIVE:
             if (inGame)
             {
-                if (mouse.Capture())
-                {
-                    mouse.UpdateNeutralPosition(hwnd);
-                    mouse.SetNeutral();
-                }
+                mouse.UpdateNeutralPosition(hwnd);
+                mouse.Capture();
+
+                // Prevent a drag inside the game by releasing
+                // the mouse click immediately.
+                mouse.Unclick(hwnd);
             }
             binkWindow.Jump();
             break;
@@ -125,6 +126,28 @@ LRESULT CALLBACK RelayWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             NotifyNewWindowPos(hwnd);
         }
         break;
+    case WM_SYSKEYDOWN:
+        {
+            if (wParam == VK_RETURN)
+            {
+                return DefWindowProc(hwnd, msg, wParam, lParam);
+            }
+            else if (wParam == VK_MENU)
+            {
+                if (inGame)
+                {
+                    if (!mouse.IsCaptured())
+                    {
+                        mouse.Capture();
+                    }
+                    else
+                    {
+                        mouse.Release();
+                    }
+                }
+            }
+        }
+        break;
     }
 
     // Call the real handler
@@ -137,7 +160,7 @@ LRESULT CALLBACK RelayWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
         if (!inGame)
         {
             // Well... this is one way to force the game to close :)
-            exit(0);
+            ExitProcess(1701);
         }
     }
     else if (msg == WM_DESTROY)
@@ -419,13 +442,6 @@ INT_PTR WINAPI WrapDialogBoxParamA(
             if (isEscapeMenu)
             {
                 abortMissionFlag = true;
-
-                // This simulates ALT + ENTER.
-                // I'm not exactly sure why, but this keeps the game
-                // from locking up when aborting a mission after
-                // clicking the menu button in fullscreen mode lol.
-                PostMessage(armadaWindow, WM_SYSKEYDOWN, VK_RETURN, 0x20000000);
-                PostMessage(armadaWindow, WM_SYSKEYUP, VK_RETURN, 0xE0000000);
             }
             // "Single Player" menu to "Load Game" menu
             else if (*dialogResultFlag == 0x12)

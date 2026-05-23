@@ -16,7 +16,7 @@ private:
 public:
 
     /* Allow full control of the mouse to the game. */
-    /* Returns false if the window was already captured. */
+    /* Returns false if the mouse was already captured. */
     bool Capture();
 
     /* Allow the game to use the real mouse cursor for menus */
@@ -24,7 +24,11 @@ public:
     /* (This is the default behaviour) */
     void Share();
 
+    /* Prevent the game from interefering with normal mouse operations. */
     void Release();
+
+    /* Sends a mouse click release message to the window. */
+    void Unclick(HWND hwnd);
 
     /* Returns true iff the mouse is captured by the game. */
     bool IsCaptured();

@@ -21,6 +21,7 @@ bool MouseManager::Capture()
     if (!this->captured)
     {
         HideMouse();
+        this->SetNeutral();
         this->captured = true;
         return true;
     }
@@ -43,6 +44,11 @@ void MouseManager::Release()
         this->captured = false;
         ShowMouse();
     }
+}
+
+void MouseManager::Unclick(HWND hwnd)
+{
+    PostMessage(hwnd, WM_LBUTTONUP, 0, MAKELPARAM(this->neutralPosition.x, this->neutralPosition.y));
 }
 
 bool MouseManager::IsCaptured()
