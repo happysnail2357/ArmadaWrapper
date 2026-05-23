@@ -87,6 +87,7 @@ void BinkOverlayWindow::Show()
         this->visible = true;
         ShowWindow(this->hwnd, SW_SHOW);
         UpdateWindow(this->hwnd);
+        this->Jump();
     }
 }
 
@@ -114,7 +115,7 @@ void BinkOverlayWindow::Jump()
 
 void BinkOverlayWindow::NotifyMove(const RECT& newPos)
 {
-    if (!this->hwnd || !this->visible) return;
+    if (!this->hwnd) return;
 
     SetWindowPos(
         this->hwnd,
@@ -130,6 +131,11 @@ void BinkOverlayWindow::NotifyMove(const RECT& newPos)
 HWND BinkOverlayWindow::GetHwnd() const
 {
     return this->hwnd;
+}
+
+bool BinkOverlayWindow::IsVisible() const
+{
+    return this->visible;
 }
 
 bool BinkOverlayWindow::GetBuffer(uint8_t*& buffer)

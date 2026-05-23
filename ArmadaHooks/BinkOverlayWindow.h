@@ -43,6 +43,9 @@ public:
     /* Returns the handle to the overlay window. */
     HWND GetHwnd() const;
 
+    /* Returns true iff the overlay is shown. */
+    bool IsVisible() const;
+
     /* Sets buffer to the internal overlay render buffer. */
     /* Returns true iff buffer points to the render buffer. */
     bool GetBuffer(uint8_t*& buffer);

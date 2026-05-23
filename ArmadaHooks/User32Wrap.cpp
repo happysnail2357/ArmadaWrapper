@@ -63,6 +63,22 @@ bool ClientRectToScreenRect(HWND hwnd, PRECT box)
     return true;
 }
 
+void NotifyNewWindowPos(HWND hwnd)
+{
+    RECT clientBox;
+    if (GetClientRect(hwnd, &clientBox))
+    {
+        RECT screenBox = clientBox;
+        if (ClientRectToScreenRect(hwnd, &screenBox))
+        {
+            CustomDialogBox::NotifyMove(screenBox);
+            binkWindow.NotifyMove(screenBox);
+        }
+
+        mouse.UpdateNeutralPosition(hwnd, clientBox);
+    }
+}
+
 // Window procedure to intercept messages sent to the Armada window
 LRESULT CALLBACK RelayWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
@@ -106,18 +122,7 @@ LRESULT CALLBACK RelayWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
     case WM_WINDOWPOSCHANGED:
         {
-            RECT clientBox;
-            if (GetClientRect(hwnd, &clientBox))
-            {
-                RECT screenBox = clientBox;
-                if (ClientRectToScreenRect(hwnd, &screenBox))
-                {
-                    CustomDialogBox::NotifyMove(screenBox);
-                    binkWindow.NotifyMove(screenBox);
-                }
-
-                mouse.UpdateNeutralPosition(hwnd, clientBox);
-            }
+            NotifyNewWindowPos(hwnd);
         }
         break;
     }
@@ -215,6 +220,7 @@ HWND WINAPI WrapCreateWindowExA(
     if (isArmadaWindow)
     {
         armadaWindow = windowHandle;
+        binkWindow.Create(armadaWindow);
     }
 
     return windowHandle;
@@ -310,14 +316,15 @@ INT_PTR WINAPI WrapDialogBoxParamA(
     if (mainMenuProcedure == nullptr && dialogId == 0x123)
     {
         mainMenuProcedure = lpDialogFunc;
+
+        NotifyNewWindowPos(armadaWindow);
     }
 
-    bool isAnimatedMenu = (dialogId == 0x123 && lpDialogFunc == mainMenuProcedure) ||
+    bool containsAnimations = (dialogId == 0x123 && lpDialogFunc == mainMenuProcedure) ||
         (dialogId == 0x073 && reinterpret_cast<int>(lpDialogFunc) == 0x005499c0);
 
-    if (isAnimatedMenu)
+    if (containsAnimations)
     {
-        binkWindow.Create(armadaWindow);
         binkWindow.Show();
     }
     else if (dialogId == 0x124)
@@ -336,7 +343,7 @@ INT_PTR WINAPI WrapDialogBoxParamA(
 
     INT_PTR result = dialog.Run(popup);
 
-    if (isAnimatedMenu)
+    if (containsAnimations)
     {
         binkWindow.Hide();
     }
@@ -375,6 +382,7 @@ INT_PTR WINAPI WrapDialogBoxParamA(
                     {
                         // Clear the flag for next time
                         abortMissionFlag = false;
+                        binkWindow.Show();
                     }
                 }
                 // "Load Game"
