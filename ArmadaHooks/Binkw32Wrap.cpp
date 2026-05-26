@@ -90,6 +90,20 @@ static std::unordered_map<HBINK, BinkMovie> binkHandles{};
 
 static uint8_t* overlayBuffer{ nullptr };
 
+extern BinkMovie hoveredTextTarget{};
+
+/* Returns the non-hover equivalent to a hover bink movie. */
+static BinkMovie NotHovered(BinkMovie hoverMovie)
+{
+    if (hoverMovie == BinkMovie::None) return BinkMovie::None;
+
+    int movieAsInt = static_cast<int>(hoverMovie);
+
+    if (movieAsInt % 2 == 1) return hoverMovie;
+
+    return static_cast<BinkMovie>(movieAsInt - 1);
+}
+
 
 extern "C" __declspec(dllexport)
 HBINK __stdcall BinkOpen(const char* filename, unsigned int flags)
@@ -143,8 +157,44 @@ void __stdcall BinkCopyToBuffer(
     {
         if (overlayBuffer)
         {
-            TrueApi::api.binkw32.BinkCopyToBuffer(bnk, overlayBuffer, destPitch, destHeight, destx, desty, flags);
+            // If no (x, y) coordinates are given, then this is going to be
+            // an animation with the "<Race> campaign not complete" message
+            // on top. We'll just redirect this copy into our buffer like
+            // the normal animations and handle the text in WrapDrawTextA.
+            if (!destx && !desty)
+            {
+                switch (handle->second)
+                {
+                case BinkMovie::KlingonHover:
+                    destx = 360;
+                    desty = 30;
+                    destPitch = 1280;
+                    break;
 
+                case BinkMovie::RomulanHover:
+                    destx = 0;
+                    desty = 250;
+                    destPitch = 1280;
+                    break;
+
+                case BinkMovie::BorgHover:
+                    destx = 360;
+                    desty = 250;
+                    destPitch = 1280;
+                    break;
+
+                default:
+                    DEBUG_PRINTF(TEXT("Bink frame copied to origin! BinkMovie #%d"), handle->second);
+                }
+
+                hoveredTextTarget = handle->second;
+            }
+            else if (handle->second == NotHovered(hoveredTextTarget))
+            {
+                hoveredTextTarget = BinkMovie::None;
+            }
+
+            TrueApi::api.binkw32.BinkCopyToBuffer(bnk, overlayBuffer, destPitch, destHeight, destx, desty, flags);
             return;
         }
     }

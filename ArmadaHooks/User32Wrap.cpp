@@ -8,6 +8,8 @@
 #include "BinkOverlayWindow.h"
 #include "TrueApi.h"
 
+#include "Binkw32Wrap.h"
+
 
 /************  Global Variables  ************/
 
@@ -385,6 +387,7 @@ INT_PTR WINAPI WrapDialogBoxParamA(
         if (dialogId == 2096 || dialogId == 292)
         {
             inGame = true;
+            hoveredTextTarget = BinkMovie::None;
         }
         // Generic menu dialog
         else if (dialogId == 291)
@@ -501,4 +504,52 @@ LONG WINAPI WrapGetWindowLongA(HWND hwnd, int nIndex)
     }
 
     return TrueApi::api.user32.GetWindowLongA(hwnd, nIndex);
+}
+
+
+int WINAPI WrapDrawTextA(
+    HDC hdc,
+    LPCSTR lpchText,
+    int cchText,
+    LPRECT lprc,
+    UINT format)
+{
+    RECT offsetRect;
+
+    // Check if the bink hooks need text drawn over an animation 
+    switch (hoveredTextTarget)
+    {
+    case BinkMovie::KlingonHover:
+        offsetRect.left = offsetRect.right = 360;
+        offsetRect.top = offsetRect.bottom = 30;
+        break;
+
+    case BinkMovie::RomulanHover:
+        offsetRect.left = offsetRect.right = 0;
+        offsetRect.top = offsetRect.bottom = 250;
+        break;
+
+    case BinkMovie::BorgHover:
+        offsetRect.left = offsetRect.right = 360;
+        offsetRect.top = offsetRect.bottom = 250;
+        break;
+
+    default:
+        return TrueApi::api.user32.DrawTextA(hdc, lpchText, cchText, lprc, format);
+    }
+
+    // We'll redirect this text to the overlay window
+    HDC buffer = binkWindow.GetBufferDC();
+
+    if (buffer)
+    {
+        offsetRect.right += lprc->right;
+        offsetRect.bottom += lprc->bottom;
+
+        return TrueApi::api.user32.DrawTextA(buffer, lpchText, cchText, &offsetRect, format);
+    }
+    else
+    {
+        return TrueApi::api.user32.DrawTextA(hdc, lpchText, cchText, lprc, format);
+    }
 }

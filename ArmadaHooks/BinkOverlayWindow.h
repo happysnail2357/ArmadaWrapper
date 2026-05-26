@@ -40,15 +40,19 @@ public:
     /* The RECT should be in screen coordinates. */
     void NotifyMove(const RECT& newPos);
 
-    /* Returns the handle to the overlay window. */
-    HWND GetHwnd() const;
-
     /* Returns true iff the overlay is shown. */
     bool IsVisible() const;
+
+    /* Returns the handle to the overlay window. */
+    HWND GetHwnd() const;
 
     /* Sets buffer to the internal overlay render buffer. */
     /* Returns true iff buffer points to the render buffer. */
     bool GetBuffer(uint8_t*& buffer);
+
+    /* Returns the DC for the internal buffer. */
+    /* Returns NULL if GetBuffer has not been called yet. */
+    HDC GetBufferDC() const;
 
     /* Notify the overlay that it is time to render the next frame. */
     void Render();

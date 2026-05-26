@@ -12,3 +12,4 @@ EXPORTS
     EndDialog = WrapEndDialog
     SetWindowLongA = WrapSetWindowLongA
     GetWindowLongA = WrapGetWindowLongA
+    DrawTextA = WrapDrawTextA

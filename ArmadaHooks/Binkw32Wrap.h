@@ -32,13 +32,14 @@ void __stdcall BinkCopyToBuffer(
 
 enum class BinkMovie
 {
+    None,
     Singleplayer,
-    Multiplayer,
-    Contruction,
-    Wormhole,
     SingleplayerHover,
+    Multiplayer,
     MultiplayerHover,
+    Contruction,
     ContructionHover,
+    Wormhole,
     WormholeHover,
     Federation,
     FederationHover,
@@ -52,3 +53,5 @@ enum class BinkMovie
     OmegaHover,
 };
 
+
+extern BinkMovie hoveredTextTarget;

@@ -128,14 +128,14 @@ void BinkOverlayWindow::NotifyMove(const RECT& newPos)
     );
 }
 
-HWND BinkOverlayWindow::GetHwnd() const
-{
-    return this->hwnd;
-}
-
 bool BinkOverlayWindow::IsVisible() const
 {
     return this->visible;
+}
+
+HWND BinkOverlayWindow::GetHwnd() const
+{
+    return this->hwnd;
 }
 
 bool BinkOverlayWindow::GetBuffer(uint8_t*& buffer)
@@ -153,6 +153,9 @@ bool BinkOverlayWindow::GetBuffer(uint8_t*& buffer)
 
     if (!this->bufferHdc)
         this->bufferHdc = CreateCompatibleDC(hdc);
+
+    SetBkMode(this->bufferHdc, TRANSPARENT);
+    SetTextColor(this->bufferHdc, RGB(255, 255, 255));
 
     BitmapInfo565 bmi = {};
     bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
@@ -190,6 +193,11 @@ bool BinkOverlayWindow::GetBuffer(uint8_t*& buffer)
     buffer = reinterpret_cast<uint8_t*>(dibBits);
 
     return true;
+}
+
+HDC BinkOverlayWindow::GetBufferDC() const
+{
+    return this->bufferHdc;
 }
 
 void BinkOverlayWindow::Render()

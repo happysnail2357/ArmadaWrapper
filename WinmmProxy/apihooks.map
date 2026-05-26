@@ -12,6 +12,7 @@ user32 {
     EndDialog
     SetWindowLongA
     GetWindowLongA
+    DrawTextA
 }
 
 binkw32 {
