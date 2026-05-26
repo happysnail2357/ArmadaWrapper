@@ -1,7 +1,7 @@
 # Developer Information
 
 ArmadaWrapper is built with Microsoft Visual Studio 2022 and is comprised of two DLL projects.
-Python is required for a build script.
+Python is required for the build process.
 
 ## Project Overview
 

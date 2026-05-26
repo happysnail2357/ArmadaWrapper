@@ -23,7 +23,7 @@ Close the setup once it has finished.
 ## Step 2 - Install Armada Patches
 
 Download the [official Armada 1.2 patch](http://armadafiles.com/files/armada/official-releases/patches/star-trek-armada-12-patch/details)
-and install it. (You can skip this if you already have version 1.2)
+and install it. (You can skip this if your copy of Armada is already version 1.2)
 
 Download the [unofficial Armada 1.3 patch](http://armadafiles.com/files/armada/mods/patches/star-trek-armada-patch-1-3-project/details)
 and install it.
@@ -44,10 +44,10 @@ This folder should have four DLL files inside of it. Copy them into the game's f
 
 At this point you should be able to run Armada normally.
 
-:no_entry_sign: **Don't apply any Windows compatibility settings to game!** :no_entry_sign:
+:no_entry_sign: **Don't apply any Windows compatibility settings to the game!** :no_entry_sign:
 
-Goto the Armada *Options* menu and then the *Graphics Settings* menu.
-Set *Graphics Detail* to its max value. For *Display Mode* choose your prefered resolution:
+Once you have Armada running, goto the *Options* menu and then the *Graphics Settings* menu.
+Set *Graphics Detail* to its maximum value. For *Display Mode* choose the resolution you prefer from the dropdown list:
 
 - 640x480 - classic look, seamless menu transitions
 - max 4:3 - original aspect ratio, best qualilty
