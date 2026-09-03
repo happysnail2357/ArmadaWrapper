@@ -82,6 +82,8 @@ void BinkOverlayWindow::Destroy()
 
 void BinkOverlayWindow::Show()
 {
+    this->frozen = false;
+
     if (this->hwnd && !this->visible)
     {
         this->visible = true;
@@ -93,12 +95,27 @@ void BinkOverlayWindow::Show()
 
 void BinkOverlayWindow::Hide()
 {
+    this->frozen = false;
+
     if (this->hwnd && this->visible)
     {
         this->visible = false;
         ShowWindow(this->hwnd, SW_HIDE);
         EraseBuffer();
     }
+}
+
+void BinkOverlayWindow::Freeze()
+{
+    if (this->hwnd && this->visible)
+    {
+        this->frozen = true;
+    }
+}
+
+void BinkOverlayWindow::Unfreeze()
+{
+    this->frozen = false;
 }
 
 void BinkOverlayWindow::Jump()
@@ -202,7 +219,7 @@ HDC BinkOverlayWindow::GetBufferDC() const
 
 void BinkOverlayWindow::Render()
 {
-    if (!this->visible || !this->bufferHdc || !this->bufferBitmap)
+    if (!this->visible || !this->bufferHdc || !this->bufferBitmap || this->frozen)
         return;
 
     HDC hdcWindow = GetDC(this->hwnd);

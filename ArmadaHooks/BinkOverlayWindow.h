@@ -33,6 +33,12 @@ public:
     /* Hide the overlay window. */
     void Hide();
 
+    /* Pause rendering on the overlay window. */
+    void Freeze();
+
+    /* Resume rendering on the overlay window. */
+    void Unfreeze();
+
     /* Move the overlay to the top of the Z-order */
     void Jump();
 
@@ -74,6 +80,7 @@ private:
     HWND hwnd{ nullptr };
 
     bool visible{};
+    bool frozen{};
 
     void EraseBuffer();
 

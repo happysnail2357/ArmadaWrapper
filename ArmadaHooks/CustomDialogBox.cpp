@@ -208,6 +208,12 @@ INT_PTR CustomDialogBox::Run(bool popup)
         {
             // Disable previous dialog
             EnableWindow((*it)->window, FALSE);
+            SetWindowPos(
+                this->handle.window,
+                HWND_TOPMOST,
+                0, 0, 0, 0,
+                SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE
+            );
         }
         else
         {

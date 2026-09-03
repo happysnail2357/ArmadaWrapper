@@ -354,7 +354,7 @@ INT_PTR WINAPI WrapDialogBoxParamA(
     }
     else if (dialogId == 0x124)
     {
-        binkWindow.Hide();
+        binkWindow.Freeze();
     }
 
     // The actual DialogBoxParamA API is not used
