@@ -195,9 +195,10 @@ INT_PTR CustomDialogBox::Run(bool popup)
 
     this->handle.popup = popup;
 
+    SetFocus(NULL);
     ShowWindow(this->handle.window, SW_SHOW);
     UpdateWindow(this->handle.window);
-
+    
     if (dialogHandles.size() > 1)
     {
         auto it = dialogHandles.rbegin(); // this dialog
