@@ -316,13 +316,12 @@ INT_PTR WINAPI WrapDialogBoxParamA(
     LPARAM dwInitParam
 )
 {
-    ATOM dialogId{};
-    uintptr_t templateNameAsInt = reinterpret_cast<uintptr_t>(lpTemplateName);
+    // The actual DialogBoxParamA API is not used
+    // here because it disables the parent window.
+    // Instead, a custom dialog class is used which
+    // utitlizes CreateDialogIndirectParamA.
 
-    if (templateNameAsInt <= 0xFFFF)
-    {
-        dialogId = static_cast<ATOM>(templateNameAsInt);
-    }
+    CustomDialogBox dialog(hInstance, lpTemplateName, hWndParent, lpDialogFunc, dwInitParam);
 
     if (inGame)
     {
@@ -332,39 +331,32 @@ INT_PTR WINAPI WrapDialogBoxParamA(
         inGame = false;
         mouse.Share();
 
-        if (dialogId == 291)
+        if (dialog.Id() == 291)
         {
             isEscapeMenu = true;
         }
     }
 
-    if (mainMenuProcedure == nullptr && dialogId == 0x123)
+    if (mainMenuProcedure == nullptr && dialog.Id() == 0x123)
     {
         mainMenuProcedure = lpDialogFunc;
 
         NotifyNewWindowPos(armadaWindow);
     }
 
-    bool containsAnimations = (dialogId == 0x123 && lpDialogFunc == mainMenuProcedure) ||
-        (dialogId == 0x073 && reinterpret_cast<int>(lpDialogFunc) == 0x005499c0);
+    bool containsAnimations = (dialog.Id() == 0x123 && lpDialogFunc == mainMenuProcedure) ||
+        (dialog.Id() == 0x073 && reinterpret_cast<int>(lpDialogFunc) == 0x005499c0);
 
     if (containsAnimations)
     {
         binkWindow.Show();
     }
-    else if (dialogId == 0x124)
+    else if (dialog.Id() == 0x124)
     {
         binkWindow.Freeze();
     }
 
-    // The actual DialogBoxParamA API is not used
-    // here because it disables the parent window.
-    // Instead, a custom dialog class is used which
-    // utitlizes CreateDialogIndirectParamA.
-
-    CustomDialogBox dialog(hInstance, lpTemplateName, hWndParent, lpDialogFunc, dwInitParam);
-
-    bool popup = dialogId == 0x124 || dialogId == 0x87f || dialogId == 0x873 || (dialogId == 0x73 && isEscapeMenu);
+    bool popup = dialog.Id() == 0x124 || dialog.Id() == 0x87f || dialog.Id() == 0x873 || (dialog.Id() == 0x73 && isEscapeMenu);
 
     INT_PTR result = dialog.Run(popup);
 
@@ -372,7 +364,7 @@ INT_PTR WINAPI WrapDialogBoxParamA(
     {
         binkWindow.Hide();
     }
-    else if (dialogId == 0x124 && result == 0)
+    else if (dialog.Id() == 0x124 && result == 0)
     {
         binkWindow.Show();
     }
@@ -384,13 +376,13 @@ INT_PTR WINAPI WrapDialogBoxParamA(
     if (result == 1)
     {
         // Multiplayer setup and single player select dialogs
-        if (dialogId == 2096 || dialogId == 292)
+        if (dialog.Id() == 2096 || dialog.Id() == 292)
         {
             inGame = true;
             hoveredTextTarget = BinkMovie::None;
         }
         // Generic menu dialog
-        else if (dialogId == 291)
+        else if (dialog.Id() == 291)
         {
             if (isEscapeMenu)
             {
@@ -439,7 +431,7 @@ INT_PTR WINAPI WrapDialogBoxParamA(
             }
         }
         // Messagebox dialog
-        else if (dialogId == 115)
+        else if (dialog.Id() == 115)
         {
             // "Abort Mission" popup
             if (isEscapeMenu)

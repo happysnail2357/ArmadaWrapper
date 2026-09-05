@@ -36,28 +36,11 @@ struct DialogHandle
 
 class CustomDialogBox
 {
-private:
-    // STATIC
-
+private: // Static
+    
     static std::list<DialogHandle*> dialogHandles;
 
-    // INSTANCE
-
-    void Create();
-    void Destroy();
-
-    void RunMessageLoop();
-
-    HINSTANCE hInstance;
-    LPCSTR lpTemplateName;
-    HWND hWndParent;
-    DLGPROC lpDialogFunc;
-    LPARAM dwInitParam;
-
-    DialogHandle handle{};
-
-public:
-    // STATIC
+public: // Static
 
     /* Reposition the dialog windows on parent window move. */
     /* The RECT should be in screen coordinates. */
@@ -70,7 +53,24 @@ public:
     /* Returns true iff the handle belongs to the CustomDialogBox class. */
     static bool IsCustomDialog(HWND hDlg);
 
-    // INSTANCE
+private: // Instance
+
+    void Create();
+    void Destroy();
+
+    void RunMessageLoop();
+
+    HINSTANCE hInstance;
+    LPCSTR lpTemplateName;
+    HWND hWndParent;
+    DLGPROC lpDialogFunc;
+    LPARAM dwInitParam;
+
+    ATOM templateId;
+
+    DialogHandle handle{};
+
+public: // Instance
 
     /* Initialize the dialog wrapper with the original API parameters. */
     CustomDialogBox(
@@ -84,5 +84,9 @@ public:
     /* Simulate a blocking modal dialog. */
     /* If popup is true, the previous dialog will be locked instead of hidden. */
     INT_PTR Run(bool popup = false);
+
+    /* Returns the template id of the dialog if it was specified as an ATOM. */
+    /* Otherwise, it will return 0. */
+    ATOM Id() const;
 };
 

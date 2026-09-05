@@ -53,20 +53,6 @@ bool CustomDialogBox::IsCustomDialog(HWND hDlg)
     return false;
 }
 
-CustomDialogBox::CustomDialogBox(
-    HINSTANCE hInstance,
-    LPCSTR lpTemplateName,
-    HWND hWndParent,
-    DLGPROC lpDialogFunc,
-    LPARAM dwInitParam
-)
-{
-    this->hInstance = hInstance;
-    this->lpTemplateName = lpTemplateName;
-    this->hWndParent = hWndParent;
-    this->lpDialogFunc = lpDialogFunc;
-    this->dwInitParam = dwInitParam;
-}
 
 void CustomDialogBox::Create()
 {
@@ -179,6 +165,32 @@ void CustomDialogBox::Destroy()
 }
 
 
+CustomDialogBox::CustomDialogBox(
+    HINSTANCE hInstance,
+    LPCSTR lpTemplateName,
+    HWND hWndParent,
+    DLGPROC lpDialogFunc,
+    LPARAM dwInitParam
+) :
+    hInstance(hInstance),
+    lpTemplateName(lpTemplateName),
+    hWndParent(hWndParent),
+    lpDialogFunc(lpDialogFunc),
+    dwInitParam(dwInitParam)
+{
+    uintptr_t templateNameAsInt = reinterpret_cast<uintptr_t>(lpTemplateName);
+
+    if (templateNameAsInt <= 0xFFFF)
+    {
+        this->templateId = static_cast<ATOM>(templateNameAsInt);
+    }
+    else
+    {
+        this->templateId = 0;
+        DEBUG_PRINT(TEXT("CustomDialogBox: Template name is not an ATOM!"));
+    }
+}
+
 INT_PTR CustomDialogBox::Run(bool popup)
 {
     this->handle.result = -1;
@@ -198,7 +210,7 @@ INT_PTR CustomDialogBox::Run(bool popup)
     SetFocus(NULL);
     ShowWindow(this->handle.window, SW_SHOW);
     UpdateWindow(this->handle.window);
-    
+
     if (dialogHandles.size() > 1)
     {
         auto it = dialogHandles.rbegin(); // this dialog
@@ -243,4 +255,9 @@ INT_PTR CustomDialogBox::Run(bool popup)
     }
 
     return this->handle.result;
+}
+
+ATOM CustomDialogBox::Id() const
+{
+    return this->templateId;
 }
