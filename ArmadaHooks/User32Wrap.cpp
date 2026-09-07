@@ -3,11 +3,9 @@
 
 #include "pch.h"
 #include "User32Wrap.h"
-#include "CustomDialogBox.h"
-#include "MouseManager.h"
-#include "BinkOverlayWindow.h"
-#include "TrueApi.h"
+#include "HookAssets.h"
 
+#include "CustomDialogBox.h"
 #include "Binkw32Wrap.h"
 
 
@@ -22,7 +20,6 @@ bool isLoadGameMenu{ false };
 bool abortMissionFlag{ false };
 
 // Mouse cursor handling
-MouseManager mouse{};
 HCURSOR lastCursor{};
 
 // Armada window 
@@ -31,7 +28,6 @@ ATOM armadaClass{};
 WNDPROC armadaWindowProcedure{ nullptr };
 
 // Menu animation window
-extern BinkOverlayWindow binkWindow{};
 DLGPROC mainMenuProcedure{ nullptr };
 
 // While debugging the disassembly I found that
@@ -74,10 +70,10 @@ void NotifyNewWindowPos(HWND hwnd)
         if (ClientRectToScreenRect(hwnd, &screenBox))
         {
             CustomDialogBox::NotifyMove(screenBox);
-            binkWindow.NotifyMove(screenBox);
+            HookAssets::binkWindow.NotifyMove(screenBox);
         }
 
-        mouse.UpdateNeutralPosition(hwnd, clientBox);
+        HookAssets::mouse.UpdateNeutralPosition(hwnd, clientBox);
     }
 }
 
@@ -90,27 +86,27 @@ LRESULT CALLBACK RelayWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
         switch (wParam)
         {
         case WA_ACTIVE:
-            mouse.UpdateNeutralPosition(hwnd);
-            binkWindow.Jump();
+            HookAssets::mouse.UpdateNeutralPosition(hwnd);
+            HookAssets::binkWindow.Jump();
             break;
 
         case WA_CLICKACTIVE:
             if (inGame)
             {
-                mouse.UpdateNeutralPosition(hwnd);
-                mouse.Capture();
+                HookAssets::mouse.UpdateNeutralPosition(hwnd);
+                HookAssets::mouse.Capture();
 
                 // Prevent a drag inside the game by releasing
                 // the mouse click immediately.
-                mouse.Unclick(hwnd);
+                HookAssets::mouse.Unclick(hwnd);
             }
-            binkWindow.Jump();
+            HookAssets::binkWindow.Jump();
             break;
 
         case WA_INACTIVE:
             if (inGame)
             {
-                mouse.Release();
+                HookAssets::mouse.Release();
             }
             break;
         }
@@ -119,7 +115,7 @@ LRESULT CALLBACK RelayWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     case WM_SIZE:
         if (wParam == SIZE_MAXIMIZED)
         {
-            mouse.UpdateNeutralPosition(hwnd);
+            HookAssets::mouse.UpdateNeutralPosition(hwnd);
         }
         break;
 
@@ -138,13 +134,13 @@ LRESULT CALLBACK RelayWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             {
                 if (inGame)
                 {
-                    if (!mouse.IsCaptured())
+                    if (!HookAssets::mouse.IsCaptured())
                     {
-                        mouse.Capture();
+                        HookAssets::mouse.Capture();
                     }
                     else
                     {
-                        mouse.Release();
+                        HookAssets::mouse.Release();
                     }
                 }
             }
@@ -245,7 +241,7 @@ HWND WINAPI WrapCreateWindowExA(
     if (isArmadaWindow)
     {
         armadaWindow = windowHandle;
-        binkWindow.Create(armadaWindow);
+        HookAssets::binkWindow.Create(armadaWindow);
     }
 
     return windowHandle;
@@ -255,7 +251,7 @@ BOOL WINAPI WrapDestroyWindow(HWND hWnd)
 {
     if (hWnd == armadaWindow)
     {
-        binkWindow.Destroy();
+        HookAssets::binkWindow.Destroy();
     }
 
     return TrueApi::api.user32.DestroyWindow(hWnd);
@@ -264,7 +260,7 @@ BOOL WINAPI WrapDestroyWindow(HWND hWnd)
 
 BOOL WINAPI WrapGetCursorPos(LPPOINT lpPoint)
 {
-    if (mouse.IsCaptured())
+    if (HookAssets::mouse.IsCaptured())
     {
         return TrueApi::api.user32.GetCursorPos(lpPoint);
     }
@@ -274,14 +270,14 @@ BOOL WINAPI WrapGetCursorPos(LPPOINT lpPoint)
     // of the screen (which it interprets as no
     // game-mouse movement)
 
-    mouse.RetrieveNeutralPosition(lpPoint);
+    HookAssets::mouse.RetrieveNeutralPosition(lpPoint);
 
     return TRUE;
 }
 
 BOOL WINAPI WrapSetCursorPos(int X, int Y)
 {
-    if (mouse.IsCaptured())
+    if (HookAssets::mouse.IsCaptured())
     {
         return TrueApi::api.user32.SetCursorPos(X, Y);
     }
@@ -295,7 +291,7 @@ BOOL WINAPI WrapSetCursorPos(int X, int Y)
 
 HCURSOR WINAPI WrapSetCursor(HCURSOR hCursor)
 {
-    if (mouse.IsCaptured())
+    if (HookAssets::mouse.IsCaptured())
     {
         lastCursor = TrueApi::api.user32.SetCursor(hCursor);
     }
@@ -329,7 +325,7 @@ INT_PTR WINAPI WrapDialogBoxParamA(
         // then the game is either paused or ended
 
         inGame = false;
-        mouse.Share();
+        HookAssets::mouse.Share();
 
         if (dialog.Id() == 291)
         {
@@ -349,11 +345,11 @@ INT_PTR WINAPI WrapDialogBoxParamA(
 
     if (containsAnimations)
     {
-        binkWindow.Show();
+        HookAssets::binkWindow.Show();
     }
     else if (dialog.Id() == 0x124)
     {
-        binkWindow.Freeze();
+        HookAssets::binkWindow.Freeze();
     }
 
     bool popup = dialog.Id() == 0x124 || dialog.Id() == 0x87f || dialog.Id() == 0x873 || (dialog.Id() == 0x73 && isEscapeMenu);
@@ -362,11 +358,11 @@ INT_PTR WINAPI WrapDialogBoxParamA(
 
     if (containsAnimations)
     {
-        binkWindow.Hide();
+        HookAssets::binkWindow.Hide();
     }
     else if (dialog.Id() == 0x124 && result == 0)
     {
-        binkWindow.Show();
+        HookAssets::binkWindow.Show();
     }
 
     // The dialog number and result value are used to determine
@@ -400,7 +396,7 @@ INT_PTR WINAPI WrapDialogBoxParamA(
                     {
                         // Clear the flag for next time
                         abortMissionFlag = false;
-                        binkWindow.Show();
+                        HookAssets::binkWindow.Show();
                     }
                 }
                 // "Load Game"
@@ -531,7 +527,7 @@ int WINAPI WrapDrawTextA(
     }
 
     // We'll redirect this text to the overlay window
-    HDC buffer = binkWindow.GetBufferDC();
+    HDC buffer = HookAssets::binkWindow.GetBufferDC();
 
     if (buffer)
     {

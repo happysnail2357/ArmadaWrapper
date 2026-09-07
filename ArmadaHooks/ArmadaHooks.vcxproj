@@ -149,6 +149,7 @@
     <ClInclude Include="Binkw32Wrap.h" />
     <ClInclude Include="CustomDialogBox.h" />
     <ClInclude Include="framework.h" />
+    <ClInclude Include="HookAssets.h" />
     <ClInclude Include="MouseManager.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="resource.h" />
@@ -160,6 +161,7 @@
     <ClCompile Include="Binkw32Wrap.cpp" />
     <ClCompile Include="CustomDialogBox.cpp" />
     <ClCompile Include="dllmain.cpp" />
+    <ClCompile Include="HookAssets.cpp" />
     <ClCompile Include="MouseManager.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>

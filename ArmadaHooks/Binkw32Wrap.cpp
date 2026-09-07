@@ -3,8 +3,7 @@
 
 #include "pch.h"
 #include "Binkw32Wrap.h"
-#include "User32Wrap.h"
-#include "TrueApi.h"
+#include "HookAssets.h"
 
 #include <unordered_map>
 #include <string>
@@ -118,7 +117,7 @@ HBINK __stdcall BinkOpen(const char* filename, unsigned int flags)
 
         if (overlayBuffer == nullptr)
         {
-            binkWindow.GetBuffer(overlayBuffer);
+            HookAssets::binkWindow.GetBuffer(overlayBuffer);
         }
     }
 
@@ -136,7 +135,7 @@ void __stdcall BinkClose(HBINK bnk)
 extern "C" __declspec(dllexport)
 void __stdcall BinkWait(HBINK bnk)
 {
-    binkWindow.Render();
+    HookAssets::binkWindow.Render();
 
     TrueApi::api.binkw32.BinkWait(bnk);
 }
