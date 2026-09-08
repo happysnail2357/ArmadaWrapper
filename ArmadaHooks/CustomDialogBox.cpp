@@ -53,6 +53,19 @@ bool CustomDialogBox::IsCustomDialog(HWND hDlg)
     return false;
 }
 
+bool CustomDialogBox::ActivateTopmost()
+{
+    if (dialogHandles.empty()) return false;
+
+    auto handle = dialogHandles.back();
+
+    return SetWindowPos(
+        handle->window,
+        0, 0, 0, 0, 0,
+        SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER
+    );
+}
+
 
 void CustomDialogBox::Create()
 {

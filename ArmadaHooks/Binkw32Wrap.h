@@ -28,30 +28,3 @@ void __stdcall BinkCopyToBuffer(
     unsigned int destx,
     unsigned int desty,
     unsigned int flags);
-
-
-enum class BinkMovie
-{
-    None,
-    Singleplayer,
-    SingleplayerHover,
-    Multiplayer,
-    MultiplayerHover,
-    Contruction,
-    ContructionHover,
-    Wormhole,
-    WormholeHover,
-    Federation,
-    FederationHover,
-    Klingon,
-    KlingonHover,
-    Romulan,
-    RomulanHover,
-    Borg,
-    BorgHover,
-    Omega,
-    OmegaHover,
-};
-
-
-extern BinkMovie hoveredTextTarget;

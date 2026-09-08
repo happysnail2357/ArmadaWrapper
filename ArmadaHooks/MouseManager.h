@@ -10,7 +10,10 @@ private:
     bool captured{ true };
     POINT neutralPosition{};
 
+    /* Unhide the mouse cursor. */
     void ShowMouse();
+
+    /* Hide the mouse cursor. */
     void HideMouse();
 
 public:

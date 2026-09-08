@@ -53,6 +53,10 @@ public: // Static
     /* Returns true iff the handle belongs to the CustomDialogBox class. */
     static bool IsCustomDialog(HWND hDlg);
 
+    /* Activate the topmost dialog window. */
+    /* Returns true if a dialog was activated. */
+    static bool ActivateTopmost();
+
 private: // Instance
 
     void Create();

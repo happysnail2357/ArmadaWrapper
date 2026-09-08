@@ -4,5 +4,6 @@
 #include "pch.h"
 #include "HookAssets.h"
 
+StateManager HookAssets::state{};
 MouseManager HookAssets::mouse{};
 BinkOverlayWindow HookAssets::binkWindow{};

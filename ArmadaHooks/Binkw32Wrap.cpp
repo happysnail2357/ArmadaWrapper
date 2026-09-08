@@ -9,99 +9,91 @@
 #include <string>
 
 
-static const std::unordered_map<std::string, const BinkMovie> binkFiles
+struct HoverableMenuAnimation
+{
+    MenuAnimation animation;
+    bool hovered;
+};
+
+static const std::unordered_map<std::string, const HoverableMenuAnimation> binkFiles
 {
     {
         "animations\\single01.bik",
-        BinkMovie::Singleplayer
+        { MenuAnimation::Singleplayer, false }
     },
     {
         "animations\\single02.bik",
-        BinkMovie::SingleplayerHover
+        { MenuAnimation::Singleplayer, true }
     },
     {
         "animations\\multi01.bik",
-        BinkMovie::Multiplayer
+        { MenuAnimation::Multiplayer, false }
     },
     {
         "animations\\multi02.bik",
-        BinkMovie::MultiplayerHover
+        { MenuAnimation::Multiplayer, true }
     },
     {
         "animations\\const01.bik",
-        BinkMovie::Contruction
+        { MenuAnimation::Contruction, false }
     },
     {
         "animations\\const02.bik",
-        BinkMovie::ContructionHover
+        { MenuAnimation::Contruction, true }
     },
     {
         "animations\\credit01.bik",
-        BinkMovie::Wormhole
+        { MenuAnimation::Wormhole, false }
     },
     {
         "animations\\credit02.bik",
-        BinkMovie::WormholeHover
+        { MenuAnimation::Wormhole, true }
     },
     {
         "animations\\fed01.bik",
-        BinkMovie::Federation
+        { MenuAnimation::Federation, false }
     },
     {
         "animations\\fed02.bik",
-        BinkMovie::FederationHover
+        { MenuAnimation::Federation, true }
     },
     {
         "animations\\kling01.bik",
-        BinkMovie::Klingon
+        { MenuAnimation::Klingon, false }
     },
     {
         "animations\\kling02.bik",
-        BinkMovie::KlingonHover
+        { MenuAnimation::Klingon, true }
     },
     {
         "animations\\rom01.bik",
-        BinkMovie::Romulan
+        { MenuAnimation::Romulan, false }
     },
     {
         "animations\\rom02.bik",
-        BinkMovie::RomulanHover
+        { MenuAnimation::Romulan, true }
     },
     {
         "animations\\borg01.bik",
-        BinkMovie::Borg
+        { MenuAnimation::Borg, false }
     },
     {
         "animations\\borg02.bik",
-        BinkMovie::BorgHover
+        { MenuAnimation::Borg, true }
     },
     {
         "animations\\omega01.bik",
-        BinkMovie::Omega
+        { MenuAnimation::Omega, false }
     },
     {
         "animations\\omega02.bik",
-        BinkMovie::OmegaHover
+        { MenuAnimation::Omega, true }
     },
 };
 
-static std::unordered_map<HBINK, BinkMovie> binkHandles{};
+static std::unordered_map<HBINK, HoverableMenuAnimation> binkHandles{};
 
 static uint8_t* overlayBuffer{ nullptr };
-
-extern BinkMovie hoveredTextTarget{};
-
-/* Returns the non-hover equivalent to a hover bink movie. */
-static BinkMovie NotHovered(BinkMovie hoverMovie)
-{
-    if (hoverMovie == BinkMovie::None) return BinkMovie::None;
-
-    int movieAsInt = static_cast<int>(hoverMovie);
-
-    if (movieAsInt % 2 == 1) return hoverMovie;
-
-    return static_cast<BinkMovie>(movieAsInt - 1);
-}
 
 
 extern "C" __declspec(dllexport)
@@ -160,37 +152,37 @@ void __stdcall BinkCopyToBuffer(
             // an animation with the "<Race> campaign not complete" message
             // on top. We'll just redirect this copy into our buffer like
             // the normal animations and handle the text in WrapDrawTextA.
-            if (!destx && !desty)
+            if (!destx && !desty && handle->second.hovered)
             {
-                switch (handle->second)
+                switch (handle->second.animation)
                 {
-                case BinkMovie::KlingonHover:
+                case MenuAnimation::Klingon:
                     destx = 360;
                     desty = 30;
                     destPitch = 1280;
                     break;
 
-                case BinkMovie::RomulanHover:
+                case MenuAnimation::Romulan:
                     destx = 0;
                     desty = 250;
                     destPitch = 1280;
                     break;
 
-                case BinkMovie::BorgHover:
+                case MenuAnimation::Borg:
                     destx = 360;
                     desty = 250;
                     destPitch = 1280;
                     break;
 
                 default:
-                    DEBUG_PRINTF(TEXT("Bink frame copied to origin! BinkMovie #%d"), handle->second);
+                    DEBUG_PRINTF(TEXT("Bink frame copied to origin! MenuAnimation #%d%s"), handle->second.animation, handle->second.hovered ? TEXT(" hovered") : TEXT(""));
                 }
 
-                hoveredTextTarget = handle->second;
+                HookAssets::state.textRenderTarget = handle->second.animation;
             }
-            else if (handle->second == NotHovered(hoveredTextTarget))
+            else if (handle->second.animation == HookAssets::state.textRenderTarget)
             {
-                hoveredTextTarget = BinkMovie::None;
+                HookAssets::state.textRenderTarget = MenuAnimation::None;
             }
 
             TrueApi::api.binkw32.BinkCopyToBuffer(bnk, overlayBuffer, destPitch, destHeight, destx, desty, flags);

@@ -153,6 +153,7 @@
     <ClInclude Include="MouseManager.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="resource.h" />
+    <ClInclude Include="StateManager.h" />
     <ClInclude Include="TrueApi.h" />
     <ClInclude Include="User32Wrap.h" />
   </ItemGroup>
@@ -169,6 +170,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="StateManager.cpp" />
     <ClCompile Include="TrueApi.cpp" />
     <ClCompile Include="User32Wrap.cpp" />
   </ItemGroup>

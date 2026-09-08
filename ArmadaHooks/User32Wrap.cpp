@@ -6,34 +6,17 @@
 #include "HookAssets.h"
 
 #include "CustomDialogBox.h"
-#include "Binkw32Wrap.h"
 
 
 /************  Global Variables  ************/
 
-// Flag to indicate main gameplay
-bool inGame{ false };
-
-// Menu flags
-bool isEscapeMenu{ false };
-bool isLoadGameMenu{ false };
-bool abortMissionFlag{ false };
-
-// Mouse cursor handling
+// Mouse cursor management
 HCURSOR lastCursor{};
 
-// Armada window 
+// Armada window management
 HWND armadaWindow{ nullptr };
 ATOM armadaClass{};
 WNDPROC armadaWindowProcedure{ nullptr };
-
-// Menu animation window
-DLGPROC mainMenuProcedure{ nullptr };
-
-// While debugging the disassembly I found that
-// the dialog menus place values at this address
-// depending on which dialog button is pressed.
-const DWORD* dialogResultFlag = reinterpret_cast<DWORD*>(0x68B8C0);
 
 
 /************** Non-API Functions **************/
@@ -88,10 +71,18 @@ LRESULT CALLBACK RelayWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
         case WA_ACTIVE:
             HookAssets::mouse.UpdateNeutralPosition(hwnd);
             HookAssets::binkWindow.Jump();
+
+            if (!HookAssets::state.IsInGame() && HookAssets::state.IsMapEditorMode())
+            {
+                if (CustomDialogBox::ActivateTopmost())
+                {
+                    return DefWindowProc(hwnd, msg, wParam, lParam);
+                }
+            }
             break;
 
         case WA_CLICKACTIVE:
-            if (inGame)
+            if (HookAssets::state.IsInGame())
             {
                 HookAssets::mouse.UpdateNeutralPosition(hwnd);
                 HookAssets::mouse.Capture();
@@ -100,11 +91,15 @@ LRESULT CALLBACK RelayWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 // the mouse click immediately.
                 HookAssets::mouse.Unclick(hwnd);
             }
+            else if (HookAssets::state.IsMapEditorMode())
+            {
+                return DefWindowProc(hwnd, msg, wParam, lParam);
+            }
             HookAssets::binkWindow.Jump();
             break;
 
         case WA_INACTIVE:
-            if (inGame)
+            if (HookAssets::state.IsInGame())
             {
                 HookAssets::mouse.Release();
             }
@@ -132,7 +127,7 @@ LRESULT CALLBACK RelayWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             }
             else if (wParam == VK_MENU)
             {
-                if (inGame)
+                if (HookAssets::state.IsInGame())
                 {
                     if (!HookAssets::mouse.IsCaptured())
                     {
@@ -155,7 +150,7 @@ LRESULT CALLBACK RelayWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     {
         DEBUG_PRINT(TEXT("Window is closing !!!"));
 
-        if (!inGame)
+        if (!HookAssets::state.IsInGame())
         {
             // Well... this is one way to force the game to close :)
             ExitProcess(1701);
@@ -319,128 +314,44 @@ INT_PTR WINAPI WrapDialogBoxParamA(
 
     CustomDialogBox dialog(hInstance, lpTemplateName, hWndParent, lpDialogFunc, dwInitParam);
 
-    if (inGame)
+    if (HookAssets::state.IsInGame())
     {
-        // If a dialog box is being created,
-        // then the game is either paused or ended
-
-        inGame = false;
         HookAssets::mouse.Share();
-
-        if (dialog.Id() == 291)
-        {
-            isEscapeMenu = true;
-        }
     }
 
-    if (mainMenuProcedure == nullptr && dialog.Id() == 0x123)
-    {
-        mainMenuProcedure = lpDialogFunc;
+    DialogContext dialogContext = HookAssets::state.ReportDialogCreation(dialog.Id(), lpDialogFunc);
 
+    bool isAnimatedMenu = dialogContext == DialogContext::MainMenu ||
+                          dialogContext == DialogContext::SinglePlayerMenu;
+
+    if (isAnimatedMenu)
+    {
         NotifyNewWindowPos(armadaWindow);
-    }
-
-    bool containsAnimations = (dialog.Id() == 0x123 && lpDialogFunc == mainMenuProcedure) ||
-        (dialog.Id() == 0x073 && reinterpret_cast<int>(lpDialogFunc) == 0x005499c0);
-
-    if (containsAnimations)
-    {
         HookAssets::binkWindow.Show();
     }
-    else if (dialog.Id() == 0x124)
+    else if (dialogContext == DialogContext::MissionSelectPopup)
     {
         HookAssets::binkWindow.Freeze();
     }
 
-    bool popup = dialog.Id() == 0x124 || dialog.Id() == 0x87f || dialog.Id() == 0x873 || (dialog.Id() == 0x73 && isEscapeMenu);
+    bool popup = StateManager::DialogIsPopup(dialogContext);
 
     INT_PTR result = dialog.Run(popup);
 
-    if (containsAnimations)
+    if (isAnimatedMenu)
     {
         HookAssets::binkWindow.Hide();
     }
-    else if (dialog.Id() == 0x124 && result == 0)
+    else if (result == 0 && dialogContext == DialogContext::MissionSelectPopup)
+    {
+        HookAssets::binkWindow.Show();
+    }
+    else if (result == 1 && dialogContext == DialogContext::AbortMissionPopup)
     {
         HookAssets::binkWindow.Show();
     }
 
-    // The dialog number and result value are used to determine
-    // which screen the game is on. We need to do this so we 
-    // know when the game transitions to the "in game" RTS screen.
-
-    if (result == 1)
-    {
-        // Multiplayer setup and single player select dialogs
-        if (dialog.Id() == 2096 || dialog.Id() == 292)
-        {
-            inGame = true;
-            hoveredTextTarget = BinkMovie::None;
-        }
-        // Generic menu dialog
-        else if (dialog.Id() == 291)
-        {
-            if (isEscapeMenu)
-            {
-                isEscapeMenu = false;
-
-                // "Return to Game", "Restate Objectives", or "Abort Mission"
-                if (*dialogResultFlag == 0x0)
-                {
-                    if (!abortMissionFlag)
-                    {
-                        //DEBUG_PRINT(TEXT("Entering Game"));
-                        inGame = true;
-                    }
-                    else
-                    {
-                        // Clear the flag for next time
-                        abortMissionFlag = false;
-                        HookAssets::binkWindow.Show();
-                    }
-                }
-                // "Load Game"
-                else if (*dialogResultFlag == 0x18)
-                {
-                    //DEBUG_PRINT(TEXT("Entering Load Game menu"));
-                    isLoadGameMenu = true;
-                }
-            }
-            else if (isLoadGameMenu)
-            {
-                isLoadGameMenu = false;
-
-                // User chose to load a game
-                if (*dialogResultFlag == 0x0)
-                {
-                    //DEBUG_PRINT(TEXT("Entering Game"));
-                    inGame = true;
-                }
-                // User chose to return to previous menu (escape menu)
-                else if (*dialogResultFlag == 0xB)
-                {
-                    //DEBUG_PRINT(TEXT("Exiting Load Game menu"));
-                    isEscapeMenu = true;
-                }
-                // User chose to return to previous menu (single player menu)
-                // else if (*dialogResultFlag == 0x2)
-            }
-        }
-        // Messagebox dialog
-        else if (dialog.Id() == 115)
-        {
-            // "Abort Mission" popup
-            if (isEscapeMenu)
-            {
-                abortMissionFlag = true;
-            }
-            // "Single Player" menu to "Load Game" menu
-            else if (*dialogResultFlag == 0x12)
-            {
-                isLoadGameMenu = true;
-            }
-        }
-    }
+    HookAssets::state.ReportDialogClose(dialogContext, result);
 
     return result;
 }
@@ -504,20 +415,20 @@ int WINAPI WrapDrawTextA(
 {
     RECT offsetRect;
 
-    // Check if the bink hooks need text drawn over an animation 
-    switch (hoveredTextTarget)
+    // Check if the bink wrapper needs text drawn over an animation
+    switch (HookAssets::state.textRenderTarget)
     {
-    case BinkMovie::KlingonHover:
+    case MenuAnimation::Klingon:
         offsetRect.left = offsetRect.right = 360;
         offsetRect.top = offsetRect.bottom = 30;
         break;
 
-    case BinkMovie::RomulanHover:
+    case MenuAnimation::Romulan:
         offsetRect.left = offsetRect.right = 0;
         offsetRect.top = offsetRect.bottom = 250;
         break;
 
-    case BinkMovie::BorgHover:
+    case MenuAnimation::Borg:
         offsetRect.left = offsetRect.right = 360;
         offsetRect.top = offsetRect.bottom = 250;
         break;
