@@ -10,8 +10,9 @@ bool StateManager::DialogIsPopup(DialogContext context)
     switch (context)
     {
     case DialogContext::MissionSelectPopup:
+    case DialogContext::MapSelectPopup:
     case DialogContext::GameCreatePopup:
-    case DialogContext::GameJoinPopup:
+    case DialogContext::GamePasswordPopup:
     case DialogContext::AbortMissionPopup:
     case DialogContext::MapEditorPopup:
     case DialogContext::UnspecifiedPopup:
@@ -133,6 +134,16 @@ DialogContext StateManager::DetermineDialogContext(ATOM templateId, DLGPROC lpDi
             return DialogContext::Unknown;
         }
 
+    case 0x12d:
+        switch (reinterpret_cast<int>(lpDialogFunc))
+        {
+        case 0x00494c70:
+            return DialogContext::MapEditorPopup;
+
+        default:
+            return DialogContext::Unknown;
+        }
+
     case 0x830:
         switch (reinterpret_cast<int>(lpDialogFunc))
         {
@@ -173,11 +184,31 @@ DialogContext StateManager::DetermineDialogContext(ATOM templateId, DLGPROC lpDi
             return DialogContext::Unknown;
         }
 
+    case 0x874:
+        switch (reinterpret_cast<int>(lpDialogFunc))
+        {
+        case 0x0053cbc0:
+            return DialogContext::GamePasswordPopup;
+
+        default:
+            return DialogContext::Unknown;
+        }
+
     case 0x87D:
         switch (reinterpret_cast<int>(lpDialogFunc))
         {
         case 0x00534bb0:
             return DialogContext::DebriefMenu;
+
+        default:
+            return DialogContext::Unknown;
+        }
+
+    case 0x87F:
+        switch(reinterpret_cast<int>(lpDialogFunc))
+        {
+        case 0x00530b70:
+            return DialogContext::MapSelectPopup;
 
         default:
             return DialogContext::Unknown;
