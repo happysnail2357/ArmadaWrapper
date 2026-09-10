@@ -148,17 +148,18 @@ LRESULT CALLBACK RelayWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
     if (msg == WM_CLOSE)
     {
-        DEBUG_PRINT(TEXT("Window is closing !!!"));
+        // It appears the game developers never meant for the game to be closed
+        // via the "X" button in the window title bar. The game will happily run
+        // as a background process after the window closes. So, we need to force
+        // kill the game when its window closes.
 
-        if (!HookAssets::state.IsInGame())
+        if (!HookAssets::state.IsInGame() || HookAssets::state.IsMapEditorMode())
         {
+            DEBUG_PRINT(TEXT("Forcing process exit"));
+
             // Well... this is one way to force the game to close :)
             ExitProcess(1701);
         }
-    }
-    else if (msg == WM_DESTROY)
-    {
-        DEBUG_PRINT(TEXT("Window is being destroyed !!!"));
     }
 
     return result;
