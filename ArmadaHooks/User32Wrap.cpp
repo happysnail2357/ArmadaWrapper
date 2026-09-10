@@ -72,7 +72,7 @@ LRESULT CALLBACK RelayWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             HookAssets::mouse.UpdateNeutralPosition(hwnd);
             HookAssets::binkWindow.Jump();
 
-            if (!HookAssets::state.IsInGame() && HookAssets::state.IsMapEditorMode())
+            if (!HookAssets::state.IsInGame() && HookAssets::state.UsingMapEditor())
             {
                 if (CustomDialogBox::ActivateTopmost())
                 {
@@ -91,7 +91,7 @@ LRESULT CALLBACK RelayWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 // the mouse click immediately.
                 HookAssets::mouse.Unclick(hwnd);
             }
-            else if (HookAssets::state.IsMapEditorMode())
+            else if (HookAssets::state.UsingMapEditor())
             {
                 return DefWindowProc(hwnd, msg, wParam, lParam);
             }
@@ -153,13 +153,10 @@ LRESULT CALLBACK RelayWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
         // as a background process after the window closes. So, we need to force
         // kill the game when its window closes.
 
-        if (!HookAssets::state.IsInGame() || HookAssets::state.IsMapEditorMode())
-        {
-            DEBUG_PRINT(TEXT("Forcing process exit"));
+        DEBUG_PRINT(TEXT("Forcing process exit"));
 
-            // Well... this is one way to force the game to close :)
-            ExitProcess(1701);
-        }
+        // Well... this is one way to force the game to close :)
+        ExitProcess(1701);
     }
 
     return result;

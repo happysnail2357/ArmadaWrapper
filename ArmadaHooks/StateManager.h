@@ -58,9 +58,8 @@ private:
     /* Flag to indicate that the user has chosen to abort the current mission. */
     bool abortMissionFlag{ false };
 
-    /* Flag to indicate that the game is running in map editor mode. */
-    /* Assume the game is running in map editor mode until the first dialog is created. */
-    bool mapEditorMode{ true };
+    /* Flag to indicate when a map editor popup is active. */
+    bool usingMapEditTools{ false };
 
     /* While debugging the disassembly I found that */
     /* the dialog menus place values at this address */
@@ -86,6 +85,6 @@ public:
     /* Returns true if the game is currently in the main gameplay state. */
     bool IsInGame() const;
 
-    /* Returns true if the game was started in map editor mode. */
-    bool IsMapEditorMode() const;
+    /* Returns true if any of the map editor popups are active. */
+    bool UsingMapEditor() const;
 };

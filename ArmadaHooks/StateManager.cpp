@@ -231,7 +231,10 @@ DialogContext StateManager::ReportDialogCreation(ATOM templateId, DLGPROC lpDial
     else if (context == DialogContext::MainMenu)
     {
         this->inGame = false;
-        this->mapEditorMode = false;
+    }
+    else if (context == DialogContext::MapEditorPopup)
+    {
+        this->usingMapEditTools = true;
     }
 
     if (this->inGame)
@@ -300,6 +303,7 @@ void StateManager::ReportDialogClose(DialogContext context, INT_PTR result)
     if (context == DialogContext::MapEditorPopup)
     {
         this->inGame = true;
+        this->usingMapEditTools = false;
     }
 }
 
@@ -308,7 +312,7 @@ bool StateManager::IsInGame() const
     return this->inGame;
 }
 
-bool StateManager::IsMapEditorMode() const
+bool StateManager::UsingMapEditor() const
 {
-    return this->mapEditorMode;
+    return this->usingMapEditTools;
 }
