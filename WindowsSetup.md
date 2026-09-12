@@ -52,6 +52,7 @@ Set *Graphics Detail* to its maximum value. For *Display Mode* choose the resolu
 - 640x480 - classic look, seamless menu transitions
 - max 4:3 - original aspect ratio, best qualilty
 - max 16:9 - widescreen, best qualilty
+- max - highest resolution your monitor supports, best quality
 
 ## Additional Information
 

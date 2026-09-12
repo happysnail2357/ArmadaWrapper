@@ -1,5 +1,9 @@
-# SPDX-License-Identifier: MIT
-# Copyright © 2026 Paul Puhnaty
+# These APIs will be exported by the armada wrapper DLL
+# and hooked into a process by the winmm proxy DLL.
+#
+# This list is used to autogenerate source code snippets
+# used by the hooking procedures to maintain a stable
+# binary interface between the project DLL files.
 
 user32 {
     RegisterClassA
