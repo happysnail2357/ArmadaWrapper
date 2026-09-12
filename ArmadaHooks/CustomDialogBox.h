@@ -25,10 +25,17 @@ typedef struct {
 #pragma pack(pop)
 
 
+struct DialogProperties
+{
+    bool isPopup;
+    bool restrictKeyboardFocus;
+    bool setTopmost;
+};
+
 struct DialogHandle
 {
+    DialogProperties properties{};
     HWND window;
-    bool popup;
     bool closeFlag;
     INT_PTR result;
 };
@@ -59,7 +66,7 @@ public: // Static
 
 private: // Instance
 
-    void Create();
+    bool Create();
     void Destroy();
 
     void RunMessageLoop();
@@ -86,8 +93,7 @@ public: // Instance
     );
 
     /* Simulate a blocking modal dialog. */
-    /* If popup is true, the previous dialog will be locked instead of hidden. */
-    INT_PTR Run(bool popup = false);
+    INT_PTR Run(DialogProperties& properties);
 
     /* Returns the template id of the dialog if it was specified as an ATOM. */
     /* Otherwise, it will return 0. */

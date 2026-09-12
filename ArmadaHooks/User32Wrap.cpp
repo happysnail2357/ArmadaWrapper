@@ -308,7 +308,7 @@ INT_PTR WINAPI WrapDialogBoxParamA(
     // The actual DialogBoxParamA API is not used
     // here because it disables the parent window.
     // Instead, a custom dialog class is used which
-    // utitlizes CreateDialogIndirectParamA.
+    // utitlizes CreateDialogParamA.
 
     CustomDialogBox dialog(hInstance, lpTemplateName, hWndParent, lpDialogFunc, dwInitParam);
 
@@ -318,6 +318,18 @@ INT_PTR WINAPI WrapDialogBoxParamA(
     }
 
     DialogContext dialogContext = HookAssets::state.ReportDialogCreation(dialog.Id(), lpDialogFunc);
+
+    if (dialogContext == DialogContext::GameCreatePopup ||
+        dialogContext == DialogContext::GamePasswordPopup)
+    {
+        // Currently there is a bug in the CustomDialogBox class that keeps
+        // these dialogs from receiving mouse input until the game loses focus.
+        // So, for these particular dialogs, we'll just call the original API.
+        // This will cause location issues with the dialogs if the game is run
+        // in windowed mode, but normal users won't be affected.
+
+        return TrueApi::api.user32.DialogBoxParamA(hInstance, lpTemplateName, hWndParent, lpDialogFunc, dwInitParam);
+    }
 
     bool isAnimatedMenu = dialogContext == DialogContext::MainMenu ||
                           dialogContext == DialogContext::SinglePlayerMenu;
@@ -332,9 +344,17 @@ INT_PTR WINAPI WrapDialogBoxParamA(
         HookAssets::binkWindow.Freeze();
     }
 
-    bool popup = StateManager::DialogIsPopup(dialogContext);
+    DialogProperties properties{};
 
-    INT_PTR result = dialog.Run(popup);
+    properties.isPopup = StateManager::DialogIsPopup(dialogContext);
+
+    if (dialogContext == DialogContext::MissionSelectPopup)
+    {
+        properties.restrictKeyboardFocus = true;
+        properties.setTopmost = true;
+    }
+
+    INT_PTR result = dialog.Run(properties);
 
     if (isAnimatedMenu)
     {

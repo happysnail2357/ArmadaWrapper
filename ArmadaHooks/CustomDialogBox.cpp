@@ -12,7 +12,7 @@ void CustomDialogBox::NotifyMove(const RECT& newPos)
 
     auto handle = dialogHandles.back();
 
-    if (handle->popup) return;
+    if (handle->properties.isPopup) return;
 
     SetWindowPos(
         handle->window, // handle to the dialog
@@ -67,73 +67,24 @@ bool CustomDialogBox::ActivateTopmost()
 }
 
 
-void CustomDialogBox::Create()
+bool CustomDialogBox::Create()
 {
-    HRSRC hRes = FindResourceA(this->hInstance, this->lpTemplateName, RT_DIALOG_A);
-    if (!hRes) throw std::exception("Unable to find resource");
-
-    HGLOBAL hGlobal = LoadResource(hInstance, hRes);
-    if (!hGlobal) throw std::exception("Unable to load resource");
-
-    BYTE* pOrigData = static_cast<BYTE*>(LockResource(hGlobal));
-    if (!pOrigData) throw std::exception("Unable to lock resource");
-
-    SIZE_T templateSize = SizeofResource(hInstance, hRes);
-    BYTE* pNewData = new BYTE[templateSize];
-
-    memcpy(pNewData, pOrigData, templateSize);
-
-    // Determine if this is a DLGTEMPLATEEX
-    WORD dlgVer = *reinterpret_cast<WORD*>(pNewData);
-    WORD signature = *reinterpret_cast<WORD*>(pNewData + 2);
-
-    if (dlgVer == 1 && signature == 0xFFFF)
-    {
-        // It's a DLGTEMPLATEEX
-        DLGTEMPLATEEX* pDlgEx = reinterpret_cast<DLGTEMPLATEEX*>(pNewData);
-
-        //DEBUG_PRINTF(TEXT("Dialog style: 0x%x"), pDlgEx->style);
-        //DEBUG_PRINTF(TEXT("Dialog exStyle: 0x%x"), pDlgEx->exStyle);
-
-        // Modify the style: remove WS_POPUP, add WS_CHILD
-        //pDlgEx->style &= ~WS_POPUP;
-        //pDlgEx->style |= WS_CHILD;
-        
-        this->handle.window = CreateDialogIndirectParamA(
-            hInstance,
-            reinterpret_cast<DLGTEMPLATE*>(pNewData),  // cast is OK: both are memory-compatible
-            hWndParent,
-            lpDialogFunc,
-            dwInitParam
-        );
-    }
-    else
-    {
-        // It's a standard DLGTEMPLATE
-        DLGTEMPLATE* pDlg = reinterpret_cast<DLGTEMPLATE*>(pNewData);
-
-        //pDlg->style &= ~WS_POPUP;
-        //pDlg->style |= WS_CHILD;
-
-        this->handle.window = CreateDialogIndirectParamA(
-            hInstance,
-            pDlg,
-            hWndParent,
-            lpDialogFunc,
-            dwInitParam
-        );
-    }
-
-    delete[] pNewData;
+    this->handle.window = CreateDialogParamA(
+        hInstance,
+        lpTemplateName,
+        hWndParent,
+        lpDialogFunc,
+        dwInitParam
+    );
 
     if (this->handle.window == nullptr)
     {
-        throw std::exception("Dialog creation failed");
+        DEBUG_PRINTF(TEXT("Dialog creation failed with system error code %d"), GetLastError());
+        return false;
     }
 
     dialogHandles.push_back(&(this->handle));
-
-    //DEBUG_PRINTF(TEXT("Create dialog: 0x%08x"), reinterpret_cast<uintptr_t>(this->handle.window));
+    return true;
 }
 
 void CustomDialogBox::RunMessageLoop()
@@ -145,7 +96,7 @@ void CustomDialogBox::RunMessageLoop()
     {
         if (getMessageResult < 0)
         {
-            DEBUG_PRINTF(TEXT("Unable to retrieve next message!"));
+            DEBUG_PRINT(TEXT("CustomDialogBox: Unable to retrieve next message!"));
         }
 
         if (!IsDialogMessage(this->handle.window, &msg))
@@ -169,8 +120,6 @@ void CustomDialogBox::Destroy()
     {
         dialogHandles.erase(it);
     }
-
-    //DEBUG_PRINTF(TEXT("Destroying dialog: 0x%08x"), reinterpret_cast<uintptr_t>(this->handle.window));
 
     DestroyWindow(this->handle.window);
     this->handle.window = NULL;
@@ -204,41 +153,42 @@ CustomDialogBox::CustomDialogBox(
     }
 }
 
-INT_PTR CustomDialogBox::Run(bool popup)
+INT_PTR CustomDialogBox::Run(DialogProperties& properties)
 {
     this->handle.result = -1;
+    this->handle.properties = properties;
 
-    try
+    if (!this->Create())
     {
-        this->Create();
-    }
-    catch (const std::exception& e)
-    {
-        DEBUG_PRINTF_A("Dialog creation failed: %s", e.what());
         return this->handle.result;
     }
 
-    this->handle.popup = popup;
+    if (properties.restrictKeyboardFocus)
+    {
+        SetFocus(NULL);
+    }
 
-    SetFocus(NULL);
     ShowWindow(this->handle.window, SW_SHOW);
-    UpdateWindow(this->handle.window);
+
+    if (properties.setTopmost)
+    {
+        SetWindowPos(
+            this->handle.window,
+            HWND_TOPMOST,
+            0, 0, 0, 0,
+            SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE
+        );
+    }
 
     if (dialogHandles.size() > 1)
     {
         auto it = dialogHandles.rbegin(); // this dialog
         it++; // previous dialog
 
-        if (popup)
+        if (properties.isPopup)
         {
             // Disable previous dialog
             EnableWindow((*it)->window, FALSE);
-            SetWindowPos(
-                this->handle.window,
-                HWND_TOPMOST,
-                0, 0, 0, 0,
-                SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE
-            );
         }
         else
         {
@@ -254,7 +204,7 @@ INT_PTR CustomDialogBox::Run(bool popup)
     {
         auto handle = dialogHandles.back();
 
-        if (popup)
+        if (properties.isPopup)
         {
             // Re-enable the previous dialog
             EnableWindow(handle->window, TRUE);
